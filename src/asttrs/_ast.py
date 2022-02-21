@@ -40,12 +40,14 @@ class Serializable:
         return attr.evolve(self, **kwargs)
 
     def mutate_from_other(self, other: "Serializable", excludes=[]):
+        self_fields = [f2.name for f2 in attr.fields(self.__class__)]
+
         valid_fields = [
             f1.name
             for f1 in attr.fields(other.__class__)
             if (getattr(other, f1.name, None) is not None)
             and (f1.name not in excludes)
-            and (f1.name in [f2.name for f2 in attr.fields(self.__class__)])
+            and (f1.name in self_fields)
         ]
 
         data = other.to_dict(filter=lambda att, value: att.name in valid_fields)
@@ -64,51 +66,57 @@ class _AST(Serializable):
 @immutable
 class AST(_AST):
     @classmethod
-    def get_ast_type(cls) -> Type[_ast.AST]:
+    def to_ast_type(cls) -> Type[_ast.AST]:
         return getattr(_ast, cls.__name__)
 
     @classmethod
-    def map_asttrs_type(cls, _ast_type: Type[_ast.AST]) -> Type["AST"]:
+    def from_ast_type(cls, _ast_type: Type[_ast.AST]) -> Type["AST"]:
         import asttrs
 
         return getattr(asttrs, _ast_type.__name__)
 
-    @property
-    def ast(self) -> _ast.AST:
+    def to_ast(self) -> _ast.AST:
         cls = type(self)
+
         fields: TUPLE[attr.Attribute, ...] = (
             attr.fields(cls) if attr.has(cls) else tuple()
         )
 
-        ast_type = self.get_ast_type()
+        ast_type = self.to_ast_type()
 
         ast_fields: TUPLE[str, ...] = ast_type._fields
 
         kwargs = {}
 
         for fd in fields:
-            _name = fd.name
-            if _name in ast_fields:
+            name = fd.name
+            if name in ast_fields:
 
-                value = getattr(self, _name)
+                value = getattr(self, name)
 
                 if isinstance(value, LIST):
-                    value = [v.ast if isinstance(v, _AST) else v for v in value]
+                    value = [
+                        el.to_ast() if isinstance(el, _AST) else el for el in value
+                    ]
 
                 else:
-                    value = value.ast if isinstance(value, _AST) else value
+                    value = value.to_ast() if isinstance(value, _AST) else value
 
-                kwargs.update({_name: value})
+                kwargs.update({name: value})
 
         return ast_type(**kwargs)
 
-    def render(self) -> str:
+    @property
+    def ast(self) -> _ast.AST:
+        return self.to_ast()
 
-        return astor.to_source(self.ast)
+    def to_source(self) -> str:
+
+        return astor.to_source(self.to_ast())
 
     def dump(self, filepath: str, formatted: bool = False) -> Any:
 
-        code = self.render()
+        code = self.to_source()
 
         if formatted:
             code = blacking(isorting(code))
@@ -129,7 +137,7 @@ class AST(_AST):
 
             _ast_type: Type[_ast.AST] = type(_ast_obj)
 
-            _cls = cls.map_asttrs_type(_ast_type)
+            _cls = cls.from_ast_type(_ast_type)
 
             return _cls(
                 **{
@@ -151,6 +159,8 @@ class TypeIgnore(AST):
 
 @immutable
 class alias(AST):
+    """Both parameters are raw strings of the names. asname can be None if the regular name is to be used."""
+
     name: str
     asname: Optional[str] = None
 
@@ -184,6 +194,13 @@ class expr(AST):
 
 @immutable
 class Name(expr):
+    """
+
+    Examples:
+    >>> Name(id="xyz").to_source().strip()
+    'xyz'
+    """
+
     id: str
     ctx: expr_context = Load()
 
@@ -224,6 +241,13 @@ class arguments(AST):
 
 @immutable
 class Constant(expr):
+    """
+
+    Exampls:
+    >>> Constant(value=123).to_source().strip()
+    '(123)'
+    """
+
     value: str
     kind: Optional[str] = None
 
@@ -240,6 +264,38 @@ class stmt(AST):
 
 
 @immutable
+class Delete(stmt):
+    """Represents a del statement.
+
+    Args:
+        targets is a list of nodes, such as Name, Attribute or Subscript nodes.
+
+    Examples:
+    >>> Delete(targets=[Name(id='x'), Name(id='y'), Name(id='z')]).to_source().strip()
+    'del x, y, z'
+    """
+
+    targets: LIST[expr]
+
+
+@immutable
+class Assert(stmt):
+    """An assertion.
+
+    Args:
+        test: holds the condition, such as a Compare node.
+        msg: holds the failure message.
+
+    Examples:
+    >>> Assert(test=Name(id='x'), msg=Name(id='y')).to_source().strip()
+    'assert x, y'
+    """
+
+    test: expr
+    msg: Optional[expr] = None
+
+
+@immutable
 class Expr(stmt):
     value: expr
 
@@ -250,11 +306,10 @@ class Comment(stmt):
     body: str
 
     @classmethod
-    def get_ast_type(cls) -> Type[_ast.AST]:
+    def to_ast_type(cls) -> Type[_ast.AST]:
         return _ast.Expr
 
-    @property
-    def ast(self) -> _ast.AST:
+    def to_ast(self) -> _ast.AST:
 
         body: str = self.body.strip()
 
@@ -265,19 +320,60 @@ class Comment(stmt):
 
 @immutable
 class Assign(stmt):
+    """An assignment.
+    Args:
+        targets: is a list of nodes.
+        value: is a single node.
+
+    Multiple nodes in targets represents assigning the same value to each.
+    Unpacking is represented by putting a Tuple or List within targets.
+
+    Examples:
+    >>> Assign(targets=[Name(id='a'), Name(id='b')],
+    ...        value=Constant(value=1)).to_source().strip()
+    'a = b = 1'
+
+    >>> Assign(
+    ...     targets=[Tuple(elts=[Name(id='a'), Name(id='b')])],
+    ...     value=Name(id='c')
+    ... ).to_source().strip()
+    'a, b = c'
+    """
+
     targets: LIST[expr]
     value: expr
     type_comment: Optional[str] = None
 
 
 class Pass(stmt):
+    """A pass statement.
+
+    Examples:
+    >>> Pass().to_source().strip()
+    'pass'
+    """
+
     pass
 
 
 @immutable
 class FunctionDef(stmt):
+    """A function definition.
+
+    Args:
+        name: is a raw string of the function name.
+
+        args: is an arguments node.
+
+        body: is the list of nodes inside the function.
+
+        decorator_list: is the list of decorators to be applied, stored outermost first (i.e. the first in the list will be applied last).
+
+        returns: is the return annotation.
+    """
+
     name: str
-    args: arguments
+    args: arguments = attr.ib(default=arguments())
     body: LIST[stmt] = attr.ib(default=[Pass()])
     decorator_list: LIST[expr] = attr.ib(factory=list)
     returns: Optional[expr] = None
@@ -305,6 +401,23 @@ class Module(AST):
 
 @immutable
 class ClassDef(stmt):
+    """A class definition.
+
+    Args:
+        name: is a raw string for the class name
+
+        bases: is a list of nodes for explicitly specified base classes.
+
+        keywords: is a list of keyword nodes, principally for 'metaclass'. Other keywords will be passed to the metaclass, as per PEP-3115.
+
+        starargs, kwargs: are each a single node, as in a function call.
+        starargs will be expanded to join the list of base classes, and kwargs will be passed to the metaclass.
+
+        body: is a list of nodes representing the code within the class definition.
+
+        decorator_list: is a list of nodes, as in FunctionDef.
+    """
+
     name: str
     bases: LIST[expr] = attr.ib(factory=list)
     keywords: LIST[keyword] = attr.ib(factory=list)
@@ -314,6 +427,17 @@ class ClassDef(stmt):
 
 @immutable
 class AnnAssign(stmt):
+    """An assignment with a type annotation.
+
+    Args:
+        target: is a single node and can be a Name, a Attribute or a Subscript.
+        annotation: is the annotation, such as a Constant or Name node.
+        value: is a single optional node.
+        simple: is a boolean integer set to True for a Name node in target
+        that do not appear in between parenthesis and are hence pure names and not expressions.
+
+    """
+
     target: expr
     annotation: expr
     value: Optional[expr] = None
@@ -321,25 +445,47 @@ class AnnAssign(stmt):
 
 
 @immutable
-class Code(Serializable):
-
-    modname: str
-    module: Module = Module(body=[])
-
-
-@immutable
 class Import(stmt):
+    """An import statement.
+    Args:
+        names is a list of alias nodes.
+
+    Examples:
+    >>> Import(
+    ...     names=[alias(name='x'), alias(name='y'), alias(name='z')]
+    ... ).to_source().strip()
+    'import x, y, z'
+    """
+
     names: LIST[alias] = attr.ib(factory=list)
 
 
 @immutable
 class ImportFrom(stmt):
+    """Represents from x import y.
+        Args:
+            module: is a raw string of the 'from' name, without any leading dots, or None for statements such as from . import foo.
+            level: is an integer holding the level of the relative import (0 means absolute import).
+
+        Examples:
+        >>> ImportFrom(
+        ...     module='y',
+        ...     names=[alias(name='x'), alias(name='y'), alias(name='z')]
+        ... ).to_source().strip()
+        'from y import x, y, z'
+
+    >>>
+
+    """
+
     module: str
     names: LIST[alias] = attr.ib(factory=list)
     level: int = 0
 
 
 class operator(AST):
+    """Binary operator tokens."""
+
     pass
 
 
@@ -361,12 +507,35 @@ class Sub(operator):
 
 @immutable
 class Lambda(expr):
+    """lambda is a minimal function definition that can be used inside an expression. Unlike FunctionDef, body holds a single node."""
+
     args: arguments
     body: expr
 
 
 @immutable
 class BinOp(expr):
+    """A binary operation (like addition or division).
+
+    Args:
+        op is the operator.
+        left, right: are any expression nodes.
+
+    Examples:
+    >>> BinOp(left=Name(id='x'), op=Add(), right=Name(id='y')).to_source().strip()
+    '(x + y)'
+
+    >>> BinOp(left=Name(id='x'), op=Sub(), right=Name(id='y')).to_source().strip()
+    '(x - y)'
+
+    >>> BinOp(left=Name(id='x'), op=Mult(), right=Name(id='y')).to_source().strip()
+    '(x * y)'
+
+    >>> BinOp(left=Name(id='x'), op=RShift(), right=Name(id='y')).to_source().strip()
+    '(x >> y)'
+
+    """
+
     left: expr
     op: operator
     right: expr
@@ -374,10 +543,19 @@ class BinOp(expr):
 
 @immutable
 class Return(stmt):
+    """A return statement.
+
+    Examples:
+    >>> Return(value=Constant(value=4)).to_source().strip()
+    'return 4'
+    """
+
     value: Optional[expr] = None
 
 
 class unaryop(AST):
+    """Unary operator tokens. Not is the not keyword, Invert is the ~ operator."""
+
     pass
 
 
@@ -399,24 +577,104 @@ class USub(unaryop):
 
 @immutable
 class UnaryOp(expr):
+    """A unary operation.
+    Args:
+        op: is the operator.
+        operand: any expression node.
+
+    Examples:
+    >>> UnaryOp(op=Not(), operand=Name(id='x')).to_source().strip()
+    '(not x)'
+
+    >>> UnaryOp(op=USub(), operand=Name(id='x')).to_source().strip()
+    '(-x)'
+
+    >>> UnaryOp(op=UAdd(), operand=Name(id='x')).to_source().strip()
+    '(+x)'
+
+    >>> UnaryOp(op=Invert(), operand=Name(id='x')).to_source().strip()
+    '(~x)'
+
+    """
+
     op: unaryop
     operand: expr
 
 
 @immutable
 class List(expr):
+    """A list or tuple.
+
+    Args:
+        elts: holds a list of nodes representing the elements.
+        ctx: is Store if the container is an assignment target (i.e. (x,y)=something), and Load otherwise.
+
+    Exampls:
+    >>> List(elts=[Constant(value=1), Constant(value=2), Constant(value=3)]).to_source().strip()
+    '[1, 2, 3]'
+
+    >>> Tuple(elts=[Constant(value='a'), Constant(value='b'), Constant(value='c')]).to_source().strip()
+    "('a', 'b', 'c')"
+    """
+
     elts: LIST[expr] = attr.ib(factory=list)
     ctx: expr_context = Load()
 
 
 @immutable
-class Tuple(expr):
+class Tuple(List):
+    pass
+
+
+@immutable
+class Set(expr):
+    """A set.
+
+    Args:
+        elts: holds a list of nodes representing the set's elements.
+
+    Examples:
+    >>> Set(elts=[Constant(value='a'), Constant(value='b'), Constant(value='c')]).to_source().strip()
+    "{'a', 'b', 'c'}"
+    """
+
     elts: LIST[expr] = attr.ib(factory=list)
-    ctx: expr_context = Load()
+
+
+@immutable
+class Dict(expr):
+    """A dictionary.
+
+    Args:
+        keys, values: hold lists of nodes representing the keys and the values respectively,
+        in matching order (what would be returned when calling dictionary.keys() and dictionary.values()).
+
+        When doing dictionary unpacking using dictionary literals the expression to be expanded goes in the values list,
+        with a None at the corresponding position in keys.
+
+    Examples:
+    >>> Dict(keys=[Constant(value='a'), None], values=[Constant(value=1), Name(id='d')]).to_source().strip()
+    "{'a': 1, **d}"
+    """
+
+    keys: LIST[Optional[expr]]
+    values: LIST[expr]
 
 
 @immutable
 class Attribute(expr):
+    """Attribute access, e.g. d.keys.
+
+    Args:
+        value: is a node, typically a Name.
+        attr: is a bare string giving the name of the attribute.
+        ctx: is Load, Store or Del according to how the attribute is acted on.
+
+    Examples:
+    >>> Attribute(value=Name(id='snake'), attr='colour').to_source().strip()
+    'snake.colour'
+    """
+
     value: expr
     attr: str
     ctx: expr_context = Load()
@@ -424,6 +682,16 @@ class Attribute(expr):
 
 @immutable
 class Slice(expr):
+    """Regular slicing (on the form lower:upper or lower:upper:step). Can occur only inside the slice field of Subscript, either directly or as an element of Tuple.
+
+    Examples:
+    >>> Subscript(
+    ...     value=Name(id='l'),
+    ...     slice=Slice(lower=Constant(value=1), upper=Constant(value=2))
+    ... ).to_source().strip()
+    'l[1:2]'
+    """
+
     lower: Optional[expr] = None
     upper: Optional[expr] = None
     step: Optional[expr] = None
@@ -431,11 +699,28 @@ class Slice(expr):
 
 @immutable
 class JoinedStr(expr):
+    """An f-string, comprising a series of FormattedValue and Constant nodes."""
+
     values: LIST[expr] = attr.ib(factory=list)
 
 
 @immutable
 class FormattedValue(expr):
+    """Node representing a single formatting field in an f-string.
+    If the string contains a single formatting field and nothing else the node can be isolated otherwise it appears in JoinedStr.
+
+    Args:
+        value: is any expression node (such as a literal, a variable, or a function call).
+        conversion: is an integer:
+            -1: no formatting
+            115: !s string formatting
+            114: !r repr formatting
+            97: !a ascii formatting
+        format_spec: is a JoinedStr node representing the formatting of the value, or None if no format was specified.
+        Both conversion and format_spec can be set at the same time.
+
+    """
+
     value: expr
     conversion: Optional[int] = None
     format_spec: Optional[expr] = None
@@ -443,5 +728,19 @@ class FormattedValue(expr):
 
 @immutable
 class Starred(expr):
+    """A *var variable reference.
+
+    Args:
+        value: holds the variable, typically a Name node. This type must be used when building a Call node with *args.
+
+    Examples:
+    >>> Assign(
+    ...     targets=[Tuple(elts=[Name(id='a'),
+    ...              Starred(value=Name(id='b'))])],
+    ...     value=Name(id='it')
+    ... ).to_source().strip()
+    'a, *b = it'
+    """
+
     value: expr
     ctx: expr_context = Load()
