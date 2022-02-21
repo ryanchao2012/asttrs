@@ -1,9 +1,13 @@
 [tool.poetry]
 name = "asttrs"
-version = "0.2.0"
+version = "0.2.1"
 description = "A attrs-style wrapper for python ast"
 authors = ["ryanchao2012 <ryanchao2012@gmail.com>"]
 license = "MIT"
+readme = "README.md"
+repository = "https://github.com/ryanchao2012/asttrs"
+
+
 
 [tool.poetry.dependencies]
 python = "^3.7"
