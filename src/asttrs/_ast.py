@@ -106,15 +106,11 @@ class AST(_AST):
 
         return ast_type(**kwargs)
 
-    @property
-    def ast(self) -> _ast.AST:
-        return self.to_ast()
-
     def to_source(self) -> str:
 
         return astor.to_source(self.to_ast())
 
-    def dump(self, filepath: str, formatted: bool = False) -> Any:
+    def to_file(self, filepath: str, formatted: bool = False) -> Any:
 
         code = self.to_source()
 
@@ -147,7 +143,6 @@ class AST(_AST):
             )
 
         else:
-
             raise TypeError(_ast_obj)
 
 
@@ -166,6 +161,10 @@ class alias(AST):
 
 
 class expr_context(AST):
+    """Variable references can be used to load the value of a variable, to assign a new value to it, or to delete it.
+    Variable references are given a context to distinguish these cases.
+    """
+
     pass
 
 
@@ -183,6 +182,16 @@ class Del(expr_context):
 
 @immutable
 class arg(AST):
+    """A single argument in a list.
+
+    Args:
+        arg: is a raw string of the argument name.
+
+        annotation: is its annotation, such as a Str or Name node.
+
+        type_comment: is an optional string with the type annotation as a comment
+    """
+
     arg: str
     annotation: Optional[str] = None
     type_comment: Optional[str] = None
@@ -194,7 +203,12 @@ class expr(AST):
 
 @immutable
 class Name(expr):
-    """
+    """A variable name.
+
+    Args:
+        id: holds the name as a string.
+
+        ctx: is one of the following types.
 
     Examples:
     >>> Name(id="xyz").to_source().strip()
@@ -207,6 +221,14 @@ class Name(expr):
 
 @immutable
 class keyword(AST):
+    """A keyword argument to a function call or class definition.
+
+    Args:
+        arg: is a raw string of the parameter name.
+
+        value: is a node to pass in.
+    """
+
     arg: str
     value: expr
 
@@ -222,6 +244,19 @@ class Index(slice):
 
 @immutable
 class Call(expr):
+    """A function call.
+
+    Args:
+        func: is the function, which will often be a Name or Attribute object.
+
+        args: holds a list of the arguments passed by position.
+
+        keywords: holds a list of keyword objects representing arguments passed by keyword.
+
+    When creating a Call node, args and keywords are required, but they can be empty lists. starargs and kwargs are optional.
+
+    """
+
     func: expr
     args: LIST[expr] = attr.ib(factory=list)
     keywords: LIST[keyword] = attr.ib(factory=list)
@@ -229,6 +264,18 @@ class Call(expr):
 
 @immutable
 class arguments(AST):
+    """The arguments for a function.
+
+    Args:
+        posonlyargs, args and kwonlyargs: are lists of arg nodes.
+
+        vararg and kwarg: are single arg nodes, referring to the *args, **kwargs parameters.
+
+        kw_defaults: is a list of default values for keyword-only arguments. If one is None, the corresponding argument is required.
+
+        defaults: is a list of default values for arguments that can be passed positionally.
+        If there are fewer defaults, they correspond to the last n arguments.
+    """
 
     posonlyargs: LIST[arg] = attr.ib(factory=list)
     args: LIST[arg] = attr.ib(factory=list)
@@ -241,7 +288,12 @@ class arguments(AST):
 
 @immutable
 class Constant(expr):
-    """
+    """A constant value.
+
+    Args:
+        value: contains the Python object it represents.
+        The values represented can be simple types such as a number, string or None, but also immutable container types (tuples and frozensets)
+        if all of their elements are constant.
 
     Exampls:
     >>> Constant(value=123).to_source().strip()
@@ -254,6 +306,17 @@ class Constant(expr):
 
 @immutable
 class Subscript(expr):
+    """A subscript, such as l[1].
+
+    Args:
+        value: is the subscripted object (usually sequence or mapping).
+
+        slice: is an index, slice or key. It can be a Tuple and contain a Slice.
+
+        ctx: is Load, Store or Del according to the action performed with the subscript.
+
+    """
+
     value: expr
     slice: expr
     ctx: expr_context = Load()
@@ -297,11 +360,28 @@ class Assert(stmt):
 
 @immutable
 class Expr(stmt):
+    """When an expression, such as a function call, appears as a statement by itself with its return value not used or stored, it is wrapped in this container.
+
+    Args:
+        value: holds one of the other nodes in this section, a Constant, a Name, a Lambda, a Yield or YieldFrom node.
+
+    >>> Expr(value=UnaryOp(op=USub(), operand=Name(id='a'))).to_source().strip()
+    '-a'
+    """
+
     value: expr
 
 
 @immutable
 class Comment(stmt):
+    """A Comment wrapper for convenient purpose, since there's no comment node in ast.
+
+    Args:
+        body: comment string
+
+    >>> Comment(body="This is a comment").to_source().strip()
+    '# This is a comment'
+    """
 
     body: str
 
@@ -315,7 +395,7 @@ class Comment(stmt):
 
         cmt = body if body.startswith("#") else f"# {body}"
 
-        return _ast.Expr(value=_ast.Name(id=cmt))
+        return Expr(value=Name(id=cmt)).to_ast()
 
 
 @immutable
@@ -382,12 +462,27 @@ class FunctionDef(stmt):
 
 @immutable
 class withitem(AST):
+    """A single context manager in a with block.
+
+    Args:
+        context_expr: is the context manager, often a Call node.
+        optional_vars: is a Name, Tuple or List for the as foo part, or None if that isn't used.
+
+    """
+
     context_expr: expr
     optional_vars: Optional[expr] = None
 
 
 @immutable
 class With(stmt):
+    """A with block.
+
+    Args:
+        items: is a list of withitem nodes representing the context managers, and body is the indented block inside the context.
+
+    """
+
     items: LIST[withitem]
     body: LIST[stmt] = attr.ib(default=[Pass()])
     type_comment: Optional[str] = None
