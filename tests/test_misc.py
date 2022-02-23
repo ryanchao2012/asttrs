@@ -1,8 +1,7 @@
 import ast
 import json
 
-from asttrs import ClassDef, Comment, FunctionDef, Serializable, immutable
-from asttrs._ast import _AST, AST
+from asttrs import AST, ClassDef, Comment, FunctionDef, Serializable, immutable
 
 
 def test_serializable():
@@ -38,8 +37,6 @@ def test_serializable():
 
 
 def test_ast():
-
-    assert repr(_AST()) == str(_AST()) == "_AST"
 
     assert AST.from_ast_type(ast.ClassDef) == ClassDef
     assert AST.from_ast_type(ast.FunctionDef) == FunctionDef

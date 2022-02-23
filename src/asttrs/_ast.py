@@ -55,16 +55,8 @@ class Serializable:
         return self.evolve(**data)
 
 
-class _AST(Serializable):
-    def __repr__(self):
-        return str(self)
-
-    def __str__(self):
-        return type(self).__name__
-
-
 @immutable
-class AST(_AST):
+class AST(Serializable):
     @classmethod
     def to_ast_type(cls) -> Type[_ast.AST]:
         return getattr(_ast, cls.__name__)
@@ -95,12 +87,10 @@ class AST(_AST):
                 value = getattr(self, name)
 
                 if isinstance(value, LIST):
-                    value = [
-                        el.to_ast() if isinstance(el, _AST) else el for el in value
-                    ]
+                    value = [el.to_ast() if isinstance(el, AST) else el for el in value]
 
                 else:
-                    value = value.to_ast() if isinstance(value, _AST) else value
+                    value = value.to_ast() if isinstance(value, AST) else value
 
                 kwargs.update({name: value})
 
