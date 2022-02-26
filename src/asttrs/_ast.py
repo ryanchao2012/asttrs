@@ -14,6 +14,7 @@ from typing import Type, Union
 import astor
 import attr
 import cattr
+from pyparsing import Opt
 
 from asttrs.utils import blacking, isorting
 
@@ -925,7 +926,7 @@ class If(stmt):
     """
 
     test: expr
-    body: LIST[stmt] = attr.ib(default=[Pass()])
+    body: LIST[stmt]
     orelse: LIST[stmt] = attr.ib(factory=list)
 
 
@@ -944,7 +945,7 @@ class For(stmt):
 
     target: expr
     iter: expr
-    body: LIST[stmt] = attr.ib(default=[Pass()])
+    body: LIST[stmt]
     orelse: LIST[stmt] = attr.ib(factory=list)
     type_comment: Optional[str] = None
 
@@ -967,4 +968,107 @@ class BoolOp(expr):
     """
 
     op: boolop
-    values: LIST[expr] = attr.ib(factory=list)
+    values: LIST[expr]
+
+
+class excepthandler(AST):
+    pass
+
+
+class ExceptHandler(excepthandler):
+    """A single except clause.
+
+    Args:
+        type: is the exception type it will match, typically a Name node (or None for a catch-all except: clause).
+
+        name: is a raw string for the name to hold the exception, or None if the clause doesn't have as foo.
+
+        body: is a list of nodes.
+
+    """
+
+    type: Optional[expr]
+    name: str
+    body: LIST[stmt]
+
+
+@immutable
+class Try(stmt):
+    """try blocks. All attributes are list of nodes to execute, except for handlers, which is a list of ExceptHandler nodes."""
+
+    body: LIST[stmt]
+    handlers: LIST[excepthandler]
+    orelse: LIST[stmt] = attr.ib(factory=list)
+    finalbody: LIST[stmt] = attr.ib(factory=list)
+    pass
+
+
+class cmpop(AST):
+    """Comparison operator tokens."""
+
+    pass
+
+
+class Eq(cmpop):
+    pass
+
+
+class NotEq(cmpop):
+    pass
+
+
+class Lt(cmpop):
+    pass
+
+
+class LtE(cmpop):
+    pass
+
+
+class Gt(cmpop):
+    pass
+
+
+class GtE(cmpop):
+    pass
+
+
+class Is(cmpop):
+    pass
+
+
+class IsNot(cmpop):
+    pass
+
+
+class In(cmpop):
+    pass
+
+
+class NotIn(cmpop):
+    pass
+
+
+@immutable
+class Compare(expr):
+    """A comparison of two or more values.
+
+    Args:
+        left: is the first value in the comparison,
+
+        ops: the list of operators.
+
+        comparators: the list of values after the first element in the comparison.
+
+    Examples:
+    >>> Compare(
+    ...     left=Constant(value=1),
+    ...     ops=[LtE(), Lt()],
+    ...     comparators=[Name(id='a'), Constant(value=10)]
+    ... ).to_source().strip()
+    '(1 <= a < 10)'
+    """
+
+    left: expr
+    ops: LIST[cmpop] = attr.ib(factory=list)
+    comparators: LIST[expr] = attr.ib(factory=list)
