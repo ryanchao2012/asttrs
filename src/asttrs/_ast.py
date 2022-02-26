@@ -207,6 +207,19 @@ class expr(AST):
     pass
 
 
+class boolop(AST):
+    "Boolean operator tokens."
+    pass
+
+
+class And(boolop):
+    pass
+
+
+class Or(boolop):
+    pass
+
+
 @immutable
 class Name(expr):
     """A variable name.
@@ -594,7 +607,43 @@ class RShift(operator):
     pass
 
 
+class LShift(operator):
+    pass
+
+
 class Mult(operator):
+    pass
+
+
+class Div(operator):
+    pass
+
+
+class FloorDiv(operator):
+    pass
+
+
+class Mod(operator):
+    pass
+
+
+class Pow(operator):
+    pass
+
+
+class MatMult(operator):
+    pass
+
+
+class BitOr(operator):
+    pass
+
+
+class BitXor(operator):
+    pass
+
+
+class BitAnd(operator):
     pass
 
 
@@ -898,3 +947,24 @@ class For(stmt):
     body: LIST[stmt] = attr.ib(default=[Pass()])
     orelse: LIST[stmt] = attr.ib(factory=list)
     type_comment: Optional[str] = None
+
+
+@immutable
+class BoolOp(expr):
+    """A boolean operation, 'or' or 'and'.
+
+    Args:
+        op: is Or or And.
+
+        values: are the values involved. Consecutive operations with the same operator, such as a or b or c, are collapsed into one node with several values.
+
+    Examples:
+    >>> BoolOp(
+    ...     op=Or(),
+    ...     values=[Name(id='x'), Name(id='y')]
+    ... ).to_source().strip()
+    '(x or y)'
+    """
+
+    op: boolop
+    values: LIST[expr] = attr.ib(factory=list)
