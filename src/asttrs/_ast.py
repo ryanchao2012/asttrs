@@ -1233,7 +1233,7 @@ class While(stmt):
 
     test: expr
     body: LIST[stmt]
-    orelse: LIST[stmt] = attr.ib(factory=[])
+    orelse: LIST[stmt] = attr.ib(factory=list)
     pass
 
 
