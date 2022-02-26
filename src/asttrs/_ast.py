@@ -455,6 +455,14 @@ class Pass(stmt):
     pass
 
 
+class Break(stmt):
+    pass
+
+
+class Continue(stmt):
+    pass
+
+
 @immutable
 class FunctionDef(stmt):
     """A function definition.
@@ -771,7 +779,6 @@ class List(expr):
     ctx: expr_context = Load()
 
 
-@immutable
 class Tuple(List):
     pass
 
@@ -831,7 +838,7 @@ class Attribute(expr):
 
 
 @immutable
-class Slice(expr):
+class Slice(slice):
     """Regular slicing (on the form lower:upper or lower:upper:step). Can occur only inside the slice field of Subscript, either directly or as an element of Tuple.
 
     Examples:
@@ -845,6 +852,11 @@ class Slice(expr):
     lower: Optional[expr] = None
     upper: Optional[expr] = None
     step: Optional[expr] = None
+
+
+@immutable
+class ExtSlice(slice):
+    dims: LIST[slice]
 
 
 @immutable
@@ -999,7 +1011,6 @@ class Try(stmt):
     handlers: LIST[excepthandler]
     orelse: LIST[stmt] = attr.ib(factory=list)
     finalbody: LIST[stmt] = attr.ib(factory=list)
-    pass
 
 
 class cmpop(AST):
@@ -1096,12 +1107,10 @@ class ListComp(expr):
     generators: LIST[comprehension]
 
 
-@immutable
 class SetComp(ListComp):
     pass
 
 
-@immutable
 class GeneratorExp(ListComp):
     pass
 
@@ -1128,7 +1137,6 @@ class Yield(expr):
     value: Optional[expr] = None
 
 
-@immutable
 class YieldFrom(Yield):
     pass
 
@@ -1152,3 +1160,82 @@ class Raise(stmt):
 
     exc: Optional[expr] = None
     cause: Optional[expr] = None
+
+
+class AsyncFunctionDef(FunctionDef):
+    """An async def function definition. Has the same fields as FunctionDef."""
+
+    pass
+
+
+@immutable
+class Await(expr):
+    """An await expression. value is what it waits for. Only valid in the body of an AsyncFunctionDef."""
+
+    value: expr
+
+
+@immutable
+class AugAssign(stmt):
+    """Augmented assignment, such as a += 1.
+
+    Args:
+        target: is a Name node for x (with the Store context).
+
+        op: is binary operator.
+
+        value: is expression.
+
+    Examples:
+    >>> AugAssign(
+    ...     target=Name(id='x'),
+    ...     op=Add(),
+    ...     value=Constant(value=2)
+    ... ).to_source().strip()
+    'x += 2'
+    """
+
+    target: expr
+    op: operator
+    value: expr
+
+
+@immutable
+class Global(stmt):
+    """global and nonlocal statements.
+
+    Args:
+        names: is a list of raw strings.
+
+    Examples:
+    >>> Global(names=['x', 'y', 'z']).to_source().strip()
+    'global x, y, z'
+
+    >>> Nonlocal(names=['x', 'y', 'z']).to_source().strip()
+    'nonlocal x, y, z'
+    """
+
+    names: LIST[str]
+
+
+class Nonlocal(Global):
+    pass
+
+
+@immutable
+class While(stmt):
+    """A while loop.
+
+    Args:
+        test: holds the condition, such as a Compare node.
+
+    """
+
+    test: expr
+    body: LIST[stmt]
+    orelse: LIST[stmt] = attr.ib(factory=[])
+    pass
+
+
+class Ellipsis(expr):
+    pass
