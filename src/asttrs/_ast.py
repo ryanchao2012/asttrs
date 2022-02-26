@@ -58,11 +58,11 @@ class Serializable:
 @immutable
 class AST(Serializable):
     @classmethod
-    def to_ast_type(cls) -> Type[_ast.AST]:
+    def infer_ast_type(cls) -> Type[_ast.AST]:
         return getattr(_ast, cls.__name__)
 
     @classmethod
-    def from_ast_type(cls, _ast_type: Type[_ast.AST]) -> Type["AST"]:
+    def infer_type_from_ast(cls, _ast_type: Type[_ast.AST]) -> Type["AST"]:
         import asttrs
 
         return getattr(asttrs, _ast_type.__name__)
@@ -74,7 +74,7 @@ class AST(Serializable):
             attr.fields(cls) if attr.has(cls) else tuple()
         )
 
-        ast_type = self.to_ast_type()
+        ast_type = self.infer_ast_type()
 
         ast_fields: TUPLE[str, ...] = ast_type._fields
 
@@ -96,9 +96,22 @@ class AST(Serializable):
 
         return ast_type(**kwargs)
 
+    @classmethod
+    def from_source(cls, source: str) -> "AST":
+
+        return cls.from_ast(_ast.parse(source))
+
     def to_source(self) -> str:
 
         return astor.to_source(self.to_ast())
+
+    @classmethod
+    def from_file(cls, filepath: str) -> "AST":
+
+        with open(filepath, "r") as f:
+            source = f.read()
+
+        return cls.from_source(source)
 
     def to_file(self, filepath: str, formatted: bool = False) -> Any:
 
@@ -123,7 +136,7 @@ class AST(Serializable):
 
             _ast_type: Type[_ast.AST] = type(_ast_obj)
 
-            _cls = cls.from_ast_type(_ast_type)
+            _cls = cls.infer_type_from_ast(_ast_type)
 
             return _cls(
                 **{
@@ -376,7 +389,7 @@ class Comment(stmt):
     body: str
 
     @classmethod
-    def to_ast_type(cls) -> Type[_ast.AST]:
+    def infer_ast_type(cls) -> Type[_ast.AST]:
         return _ast.Expr
 
     def to_ast(self) -> _ast.AST:

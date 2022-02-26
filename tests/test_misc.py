@@ -38,13 +38,13 @@ def test_serializable():
 
 def test_ast():
 
-    assert AST.from_ast_type(ast.ClassDef) == ClassDef
-    assert AST.from_ast_type(ast.FunctionDef) == FunctionDef
+    assert AST.infer_type_from_ast(ast.ClassDef) == ClassDef
+    assert AST.infer_type_from_ast(ast.FunctionDef) == FunctionDef
 
 
 def test_comment():
 
-    assert Comment.to_ast_type() == ast.Expr
+    assert Comment.infer_ast_type() == ast.Expr
 
     assert (
         "# Hello World"
