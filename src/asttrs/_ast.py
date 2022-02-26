@@ -14,7 +14,6 @@ from typing import Type, Union
 import astor
 import attr
 import cattr
-from pyparsing import Opt
 
 from asttrs.utils import blacking, isorting
 
