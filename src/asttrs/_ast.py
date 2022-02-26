@@ -1071,3 +1071,63 @@ class Compare(expr):
     left: expr
     ops: LIST[cmpop] = attr.ib(factory=list)
     comparators: LIST[expr] = attr.ib(factory=list)
+
+
+@immutable
+class comprehension(AST):
+    target: expr
+    iter: expr
+    ifs: LIST[expr]
+    is_async: int
+
+
+@immutable
+class ListComp(expr):
+    """List and set comprehensions, generator expressions, and dictionary comprehensions.
+
+    Args:
+        elt (or key and value): is a single node representing the part that will be evaluated for each item.
+
+        generators: is a list of comprehension nodes.
+
+    """
+
+    elt: expr
+    generators: LIST[comprehension]
+
+
+@immutable
+class SetComp(ListComp):
+    pass
+
+
+@immutable
+class GeneratorExp(ListComp):
+    pass
+
+
+@immutable
+class DictComp(expr):
+    key: expr
+    value: expr
+    generators: LIST[comprehension]
+
+
+@immutable
+class Yield(expr):
+    """A yield or yield from expression. Because these are expressions, they must be wrapped in a Expr node if the value sent back is not used.
+
+    Examples:
+    >>> Yield(value=Name(id='x')).to_source().strip()
+    '(yield x)'
+
+    >>> YieldFrom(value=Name(id='x')).to_source().strip()
+    '(yield from x)'
+    """
+
+    value: Optional[expr] = None
+
+
+@immutable
+class YieldFrom(Yield):
+    pass
