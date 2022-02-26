@@ -1131,3 +1131,24 @@ class Yield(expr):
 @immutable
 class YieldFrom(Yield):
     pass
+
+
+@immutable
+class Raise(stmt):
+    """A raise statement.
+
+    Args:
+        exc: is the exception object to be raised, normally a Call or Name, or None for a standalone raise.
+
+        cause: is the optional part for y in raise x from y.
+
+    Examples:
+    >>> Raise().to_source().strip()
+    'raise'
+
+    >>> Raise(exc=Name(id='x'), cause=Name(id='y')).to_source().strip()
+    'raise x from y'
+    """
+
+    exc: Optional[expr] = None
+    cause: Optional[expr] = None
