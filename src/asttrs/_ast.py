@@ -845,3 +845,56 @@ class Starred(expr):
 
     value: expr
     ctx: expr_context = Load()
+
+
+@immutable
+class IfExp(expr):
+    """An expression such as a if b else c. Each field holds a single node, so in the following example, all three are Name nodes.
+
+    Examples:
+
+    >>> IfExp(
+    ...     test=Name(id='b'),
+    ...     body=Name(id='a'),
+    ...     orelse=Name(id='c')
+    ... ).to_source().strip()
+    '(a if b else c)'
+    """
+
+    test: expr
+    body: expr
+    orelse: expr
+
+
+@immutable
+class If(stmt):
+    """An if statement.
+
+    Args:
+        test: holds a single node, such as a Compare node. body and orelse: each hold a list of nodes.
+
+    """
+
+    test: expr
+    body: LIST[stmt] = attr.ib(default=[Pass()])
+    orelse: LIST[stmt] = attr.ib(factory=list)
+
+
+@immutable
+class For(stmt):
+    """A for loop.
+
+    Args:
+        target: holds the variable(s) the loop assigns to, as a single Name, Tuple or List node.
+
+        iter: holds the item to be looped over, again as a single node.
+
+        body and orelse: contain lists of nodes to execute. Those in orelse are executed if the loop finishes normally, rather than via a break statement.
+
+    """
+
+    target: expr
+    iter: expr
+    body: LIST[stmt] = attr.ib(default=[Pass()])
+    orelse: LIST[stmt] = attr.ib(factory=list)
+    type_comment: Optional[str] = None
