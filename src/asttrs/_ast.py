@@ -105,6 +105,9 @@ class AST(Serializable):
 
         return astor.to_source(self.to_ast())
 
+    def show(self) -> None:
+        print(self.to_source())
+
     @classmethod
     def from_file(cls, filepath: str) -> "AST":
 
