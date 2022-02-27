@@ -129,7 +129,9 @@ class AST(Serializable):
     @classmethod
     def from_ast(cls, _ast_obj: _ast.AST) -> Optional[Union[LIST["AST"], "AST"]]:
 
-        if isinstance(_ast_obj, (int, str, type(None))):
+        if isinstance(
+            _ast_obj, (int, str, bytes, float, complex, type(Ellipsis), type(None))
+        ):
             return _ast_obj
 
         elif isinstance(_ast_obj, LIST):
@@ -1237,5 +1239,15 @@ class While(stmt):
     pass
 
 
-class Ellipsis(expr):
+class AsyncWith(With):
+    """async for loops and async with context managers. They have the same fields as For and With, respectively.
+    Only valid in the body of an AsyncFunctionDef"""
+
+    pass
+
+
+class AsyncFor(For):
+    """async for loops and async with context managers. They have the same fields as For and With, respectively.
+    Only valid in the body of an AsyncFunctionDef"""
+
     pass
