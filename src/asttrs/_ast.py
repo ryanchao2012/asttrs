@@ -988,6 +988,7 @@ class excepthandler(AST):
     pass
 
 
+@immutable
 class ExceptHandler(excepthandler):
     """A single except clause.
 
