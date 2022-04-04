@@ -2,27 +2,35 @@
 Abstract Syntax Trees: https://docs.python.org/3/library/ast.html
 """
 import ast as _ast
-import importlib
 import sys
 from typing import Type
 
 from ._base import AST, immutable
 
-if sys.version_info[0] == 3:
-    if 7 <= sys.version_info[1] <= 9:
-        name = f"asttrs._py{sys.version_info[0]}_{sys.version_info[1]}"
-        module = importlib.import_module(name)
+if (3, 7) <= sys.version_info < (3, 8):
+    import asttrs._py3_7 as _asttrs
+    from asttrs._py3_7 import *  # noqa
 
-        stmt = getattr(module, "stmt", AST)
+    pass
 
-        globals().update(module.__dict__)
 
-    else:
-        raise ImportError("Support only Python 3.7 to 3.9")
+elif (3, 8) <= sys.version_info < (3, 9):
+    import asttrs._py3_8 as _asttrs
+    from asttrs._py3_8 import *  # noqa
+
+    pass
+
+elif (3, 9) <= sys.version_info < (3, 10):
+    import asttrs._py3_9 as _asttrs
+    from asttrs._py3_9 import *  # noqa
+
+    pass
 
 
 else:
     raise ImportError("Support only Python 3.7 to 3.9")
+
+stmt = getattr(_asttrs, "stmt", AST)
 
 
 @immutable
