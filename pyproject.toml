@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "asttrs"
-version = "0.5.2"
+version = "0.5.3"
 description = "A attrs-style wrapper for python ast"
 authors = ["ryanchao2012 <ryanchao2012@gmail.com>"]
 license = "MIT"
