@@ -1,4 +1,4 @@
-from asttrs import blacking, isorting
+from asttrs.utils import blacking, isorting
 
 
 def test_isorting():

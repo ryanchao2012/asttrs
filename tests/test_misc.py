@@ -1,7 +1,8 @@
 import ast
 import json
 
-from asttrs import AST, ClassDef, Comment, FunctionDef, Serializable, immutable
+from asttrs import AST, ClassDef, Comment, FunctionDef
+from asttrs._base import Serializable, immutable
 
 
 def test_serializable():
