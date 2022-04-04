@@ -58,8 +58,10 @@ class Comment(stmt):
     def to_ast(self) -> _ast.AST:
         from asttrs import Expr, Name, Store
 
-        body: str = self.body.strip()
+        lines = [body.strip() for body in self.body.split("\n") if body.strip()]
 
-        cmt = body if body.startswith("#") else f"# {body}"
+        cmt: str = "\n".join(
+            [body if body.startswith("#") else f"# {body}" for body in lines]
+        )
 
         return Expr(value=Name(id=cmt, ctx=Store())).to_ast()

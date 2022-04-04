@@ -51,3 +51,7 @@ def test_comment():
         "# Hello World"
         == Comment.from_ast(Comment(body="Hello World").to_ast()).to_source().strip()
     )
+
+    multilines = "\n".join(["# First line", "# Second line"])
+
+    assert multilines == Comment(body="First line\nSecond line").to_source().strip()
