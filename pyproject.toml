@@ -11,11 +11,11 @@ repository = "https://github.com/ryanchao2012/asttrs"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-attrs = "<22.0.0"
-cattrs = "<2.0.0"
-astor = "<1.0.0"
-black = "<23.0.0"
-isort = "<6.0.0"
+attrs = "*"
+astor = "*"
+black = "*"
+cattrs = "*"
+isort = "*"
 
 [tool.poetry.dev-dependencies]
 ipython = "^7.28.0"
