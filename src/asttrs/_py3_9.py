@@ -599,7 +599,7 @@ class ImportFrom(stmt):
 
     module: "identifier" = None
     names: LIST["alias"] = attr.ib(factory=list)
-    level: "int" = None
+    level: "int" = 0
 
 
 @immutable
@@ -1118,7 +1118,7 @@ class FormattedValue(expr):
     """
 
     value: "expr"
-    conversion: "int" = None
+    conversion: "int" = 0
     format_spec: "expr" = None
 
 

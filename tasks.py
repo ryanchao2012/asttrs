@@ -10,6 +10,11 @@ from invoke import task
 from asttrs._base import Defination, Example
 from cpython.Parser.asdl import ASDLParser, Product, Sum
 
+def _assign_default(type_name):
+    if type_name in ("int",):
+        return 0
+    else:
+        return None
 
 @task()
 def build(
@@ -106,7 +111,7 @@ singleton = Optional[bool]
 
                 for fd in nd.fields:
                     ann = ast.Constant(value=fd.type)
-                    value = ast.Constant(value=None) if fd.opt else None
+                    value = ast.Constant(value=_assign_default(fd.type)) if fd.opt else None
 
                     if fd.seq:
                         ann = ast.Subscript(

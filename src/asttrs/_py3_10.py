@@ -611,7 +611,7 @@ class ImportFrom(stmt):
 
     module: "identifier" = None
     names: LIST["alias"] = attr.ib(factory=list)
-    level: "int" = None
+    level: "int" = 0
 
 
 @immutable
