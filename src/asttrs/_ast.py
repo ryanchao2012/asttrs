@@ -32,8 +32,14 @@ elif (3, 10) <= sys.version_info < (3, 11):
 
     pass
 
+elif (3, 11) <= sys.version_info < (3, 12):
+    import asttrs._py3_11 as _asttrs
+    from asttrs._py3_11 import *  # noqa
+
+    pass
+
 else:
-    raise ImportError("Support only Python 3.7 to 3.10")
+    raise ImportError("Support only Python 3.7 to 3.11")
 
 stmt = getattr(_asttrs, "stmt", AST)
 
