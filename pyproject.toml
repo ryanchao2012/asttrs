@@ -22,6 +22,7 @@ dependencies = [
 
 [tool.pdm.dev-dependencies]
 dev = [
+    "invoke",
     "ipython",
     "flake8",
     "pytest",
