@@ -8,7 +8,6 @@ from typing import Optional
 from typing import Tuple as TUPLE
 from typing import Type, Union
 
-# import astor
 import ast_decompiler
 import attr
 import cattr

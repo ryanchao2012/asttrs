@@ -4,17 +4,37 @@ import ast
 from doctest import DocTestParser
 from doctest import Example as DocExample
 
-import astor
+import ast_decompiler
 from invoke import task
 
 from asttrs._base import Defination, Example
 from cpython.Parser.asdl import ASDLParser, Product, Sum
+
 
 def _assign_default(type_name):
     if type_name in ("int",):
         return 0
     else:
         return None
+
+
+HEADER = """
+# NOTE: This module is auto-generated according to 'cpython/Parser/Python.asdl',
+#       and is combined with the documents from 'cpython/Doc/library/ast.rst'.
+
+from typing import Any
+from typing import List as LIST
+from typing import Optional
+
+import attr
+
+from asttrs._base import AST, immutable
+
+string = identifier = str
+constant = Any
+singleton = Optional[bool]
+"""
+
 
 @task()
 def build(
@@ -44,7 +64,7 @@ def build(
                 exp = ast.parse(doc.source, mode="eval")
 
                 try:
-                    want = astor.to_source(
+                    want = ast_decompiler.decompile(
                         ast.parse(
                             exp.body.args[0].args[0].args[0].value,
                             mode="eval" if "mode='eval'" in doc.source else "exec",
@@ -57,23 +77,7 @@ def build(
                 el = examples[lastkey]
                 el.examples.append(Example(source=source, want=want))
 
-    print(
-        """# NOTE: This module is auto-generated according to 'cpython/Parser/Python.asdl',
-#       and is combined with the documents from 'cpython/Doc/library/ast.rst'.
-
-from typing import Any
-from typing import List as LIST
-from typing import Optional
-
-import attr
-
-from asttrs._base import AST, immutable
-
-string = identifier = str
-constant = Any
-singleton = Optional[bool]
-"""
-    )
+    print(HEADER)
 
     for node in parsed.dfns:
 
@@ -88,7 +92,7 @@ singleton = Optional[bool]
                 decorator_list=[],
             )
 
-            print(astor.to_source(cls))
+            print(ast_decompiler.decompile(cls))
 
             for nd in node.value.types:
 
@@ -111,7 +115,9 @@ singleton = Optional[bool]
 
                 for fd in nd.fields:
                     ann = ast.Constant(value=fd.type)
-                    value = ast.Constant(value=_assign_default(fd.type)) if fd.opt else None
+                    value = (
+                        ast.Constant(value=_assign_default(fd.type)) if fd.opt else None
+                    )
 
                     if fd.seq:
                         ann = ast.Subscript(
@@ -151,7 +157,7 @@ singleton = Optional[bool]
                     decorator_list=[ast.Name(id="immutable")] if body else [],
                 )
 
-                print(astor.to_source(cls))
+                print(ast_decompiler.decompile(cls))
 
         elif isinstance(node.value, Product):
 
@@ -201,7 +207,7 @@ singleton = Optional[bool]
                 body=body if body else [ast.Pass()],
                 decorator_list=[ast.Name(id="immutable")] if body else [],
             )
-            print(astor.to_source(cls))
+            print(ast_decompiler.decompile(cls))
 
         else:
             raise ValueError(node)
