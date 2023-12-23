@@ -30,7 +30,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pdm
-        pdm install
+        pdm install -G dev
     - name: Test with pytest
       run: |
         VERSION=${{matrix.python-version}}
