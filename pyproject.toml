@@ -1,31 +1,36 @@
-[tool.poetry]
+[tool.pdm.build]
+includes = []
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[project]
 name = "asttrs"
 version = "0.8.0"
 description = "A attrs-style wrapper for python ast"
-authors = ["ryanchao2012 <ryanchao2012@gmail.com>"]
-license = "MIT"
+authors = [
+    {name = "ryanchao2012", email = "ryanchao2012@gmail.com"},
+]
+dependencies = [
+    "attrs",
+    "astor",
+    "black",
+    "cattrs",
+    "isort",
+]
+
+requires-python = ">=3.7,<4.0"
+license = {text = "MIT"}
 readme = "README.md"
+
+[project.urls]
 repository = "https://github.com/ryanchao2012/asttrs"
 
-
-
-[tool.poetry.dependencies]
-python = "^3.7"
-attrs = "*"
-astor = "*"
-black = "*"
-cattrs = "*"
-isort = "*"
-
-[tool.poetry.group.dev.dependencies]
+[project.group.dev.dependencies]
 ipython = "^7.28.0"
 flake8 = "^3.9.2"
 pytest-cov = "^3.0.0"
 pytest = "^7.0.1"
 invoke = ">=2"
 coverage = "^6.3.2"
-
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
