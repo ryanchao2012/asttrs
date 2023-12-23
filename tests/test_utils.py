@@ -12,6 +12,6 @@ def test_isorting():
 def test_blacking():
 
     source = "\n".join(["def foo():", "", "", "", "", "    pass"])
-    expected = "\n".join(["def foo():", "", "    pass"])
+    expected = "\n".join(["def foo():", "    pass"])
 
     assert blacking(source).strip() == expected
