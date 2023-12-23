@@ -40,7 +40,6 @@ singleton = Optional[bool]
 def build(
     c, asdl_path="cpython/Parser/Python.asdl", doc_path="cpython/Doc/library/ast.rst"
 ):
-
     with open(asdl_path, "r") as f:
         asdl = f.read()
 
@@ -80,9 +79,7 @@ def build(
     print(HEADER)
 
     for node in parsed.dfns:
-
         if isinstance(node.value, Sum):
-
             base = node.name
 
             cls = ast.ClassDef(
@@ -95,12 +92,10 @@ def build(
             print(ast_decompiler.decompile(cls))
 
             for nd in node.value.types:
-
                 name = nd.name
                 body = []
                 docstring = []
                 if name in examples:
-
                     doc = "\n" + examples[name].docstring + "\n\n"
 
                     if examples[name].examples:
@@ -111,12 +106,16 @@ def build(
 
                             doc += src + "\n" + ex.want + "\n\n"
 
-                    docstring.append(ast.Expr(value=ast.Constant(doc)))
+                    docstring.append(ast.Expr(value=ast.Constant(value=doc, kind=None)))
 
                 for fd in nd.fields:
-                    ann = ast.Constant(value=fd.type)
+                    # print(">>", fd, fd.type)
+                    ann = ast.Constant(value=fd.type, kind=None)
                     value = (
-                        ast.Constant(value=_assign_default(fd.type)) if fd.opt else None
+                        # FIXME
+                        ast.Constant(value=_assign_default(fd.type), kind=None)
+                        if fd.opt
+                        else None
                     )
 
                     if fd.seq:
@@ -160,15 +159,13 @@ def build(
                 print(ast_decompiler.decompile(cls))
 
         elif isinstance(node.value, Product):
-
             name = node.name
             base = "AST"
             body = []
 
             for fd in node.value.fields:
-
-                ann = ast.Constant(value=fd.type)
-                value = ast.Constant(value=None) if fd.opt else None
+                ann = ast.Constant(value=fd.type, kind=None)
+                value = ast.Constant(value=None, kind=None) if fd.opt else None
 
                 if fd.seq:
                     ann = ast.Subscript(
