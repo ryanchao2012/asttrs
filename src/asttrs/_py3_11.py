@@ -81,7 +81,7 @@ class Expression(mod):
 
     >>> Expression(
     ...     body=Constant(value=123)).show()
-    (123)
+    123
     """
 
     body: "expr"
@@ -102,7 +102,7 @@ class FunctionType(mod):
 
     Examples:
 
-    >>> FunctionType(
+    >>  FunctionType(
     ...     argtypes=[
     ...         Name(id='int', ctx=Load()),
     ...         Name(id='str', ctx=Load())],
@@ -164,7 +164,7 @@ class ClassDef(stmt):
     A class definition.
     * ``name`` is a raw string for the class name
     * ``bases`` is a list of nodes for explicitly specified base classes.
-    * ``keywords`` is a list of :class:`.keyword` nodes, principally for 'metaclass'.
+    * ``keywords`` is a list of :class:`keyword` nodes, principally for 'metaclass'.
     Other keywords will be passed to the metaclass, as per `PEP-3115
     <https://peps.python.org/pep-3115/>`_.
     * ``body`` is a list of nodes representing the code within the class
@@ -352,7 +352,7 @@ class AnnAssign(stmt):
     ...             annotation=Name(id='int', ctx=Load()),
     ...             simple=0)],
     ...     type_ignores=[]).show()
-    a.b: int
+    (a.b): int
 
     >>> Module(
     ...     body=[
@@ -364,7 +364,7 @@ class AnnAssign(stmt):
     ...             annotation=Name(id='int', ctx=Load()),
     ...             simple=0)],
     ...     type_ignores=[]).show()
-    a[1]: int
+    (a[1]): int
     """
 
     target: "expr"
@@ -643,9 +643,9 @@ class TryStar(stmt):
     ...             finalbody=[])],
     ...     type_ignores=[]).show()
     try:
-       ...
+        ...
     except* Exception:
-       ...
+        ...
     """
 
     body: LIST["stmt"] = attr.ib(factory=list)
@@ -832,7 +832,7 @@ class BoolOp(expr):
     ...         values=[
     ...             Name(id='x', ctx=Load()),
     ...             Name(id='y', ctx=Load())])).show()
-    (x or y)
+    x or y
     """
 
     op: "boolop"
@@ -873,7 +873,7 @@ class BinOp(expr):
     ...         left=Name(id='x', ctx=Load()),
     ...         op=Add(),
     ...         right=Name(id='y', ctx=Load()))).show()
-    (x + y)
+    x + y
     """
 
     left: "expr"
@@ -893,7 +893,7 @@ class UnaryOp(expr):
     ...     body=UnaryOp(
     ...         op=Not(),
     ...         operand=Name(id='x', ctx=Load()))).show()
-    (not x)
+    not x
     """
 
     op: "unaryop"
@@ -942,7 +942,7 @@ class IfExp(expr):
     ...         test=Name(id='b', ctx=Load()),
     ...         body=Name(id='a', ctx=Load()),
     ...         orelse=Name(id='c', ctx=Load()))).show()
-    (a if b else c)
+    a if b else c
     """
 
     test: "expr"
@@ -1056,7 +1056,7 @@ class DictComp(expr):
     ...                 iter=Name(id='numbers', ctx=Load()),
     ...                 ifs=[],
     ...                 is_async=0)])).show()
-    {x: (x ** 2) for x in numbers}
+    {x: x ** 2 for x in numbers}
 
     >>> Expression(
     ...     body=SetComp(
@@ -1178,7 +1178,7 @@ class Compare(expr):
     ...         comparators=[
     ...             Name(id='a', ctx=Load()),
     ...             Constant(value=10)])).show()
-    (1 <= a < 10)
+    1 <= a < 10
     """
 
     left: "expr"
@@ -1192,7 +1192,7 @@ class Call(expr):
     A function call. ``func`` is the function, which will often be a
     :class:`Name` or :class:`Attribute` object. Of the arguments:
     * ``args`` holds a list of the arguments passed by position.
-    * ``keywords`` holds a list of :class:`.keyword` objects representing
+    * ``keywords`` holds a list of :class:`keyword` objects representing
     arguments passed by keyword.
     When creating a ``Call`` node, ``args`` and ``keywords`` are required, but
     they can be empty lists.
@@ -1270,7 +1270,7 @@ class JoinedStr(expr):
     ...                 format_spec=JoinedStr(
     ...                     values=[
     ...                         Constant(value='.3')]))])).show()
-    f""\"sin({a}) is {sin(a):.3}""\"
+    f'sin({a}) is {sin(a):.3}'
     """
 
     values: LIST["expr"] = attr.ib(factory=list)
@@ -1288,7 +1288,7 @@ class Constant(expr):
 
     >>> Expression(
     ...     body=Constant(value=123)).show()
-    (123)
+    123
     """
 
     value: "constant"
@@ -1768,7 +1768,7 @@ class MatchValue(pattern):
     ...                             value=Constant(value=Ellipsis))])])],
     ...     type_ignores=[]).show()
     match x:
-        case "Relevant":
+        case 'Relevant':
             ...
     """
 
@@ -2070,7 +2070,7 @@ class MatchOr(pattern):
     ...                             value=Constant(value=Ellipsis))])])],
     ...     type_ignores=[]).show()
     match x:
-        case [x] | (y):
+        case [x] | y:
             ...
     """
 
