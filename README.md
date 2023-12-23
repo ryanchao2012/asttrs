@@ -86,8 +86,8 @@ $ (cd cpython; git checkout v3.11.7)
 $ ln -vsfT .venv311 .venv
 
 # run codegen based on Python.asdl
-$ poetry run inv build | poetry run black - >! src/asttrs/_py3_11.py
+$ pdm run inv build | pdm run black - >! src/asttrs/_py3_11.py
 
 # run testing
-$ poetry run pytest --doctest-modules --cov=src --cov-report=term-missing tests
+$ pdm run pytest --doctest-modules --cov=src --cov-report=term-missing tests
 ```
