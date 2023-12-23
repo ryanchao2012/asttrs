@@ -8,7 +8,8 @@ from typing import Optional
 from typing import Tuple as TUPLE
 from typing import Type, Union
 
-import astor
+# import astor
+import ast_decompiler
 import attr
 import cattr
 
@@ -97,8 +98,7 @@ class AST(Serializable):
         return cls.from_ast(_ast.parse(source))
 
     def to_source(self) -> str:
-
-        return astor.to_source(self.to_ast())
+        return ast_decompiler.decompile(self.to_ast())
 
     def show(self) -> None:
         print(self.to_source().strip())

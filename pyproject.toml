@@ -14,10 +14,10 @@ authors = [
 ]
 dependencies = [
     "attrs",
-    "astor",
     "black",
     "cattrs",
     "isort",
+    "ast-decompiler",
 ]
 
 requires-python = ">=3.7,<4.0"
