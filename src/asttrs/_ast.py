@@ -1,8 +1,10 @@
 """
 Abstract Syntax Trees: https://docs.python.org/3/library/ast.html
 """
+
 import ast as _ast
 import sys
+import warnings
 from typing import Type
 
 from ._base import AST, immutable
@@ -38,8 +40,15 @@ elif (3, 11) <= sys.version_info < (3, 12):
 
     pass
 
-else:
-    raise ImportError("Support only Python 3.7 to 3.11")
+elif (3, 12) <= sys.version_info:
+    import asttrs._py3_12 as _asttrs
+    from asttrs._py3_12 import *  # noqa
+
+    warnings.warn(
+        "For Python 3.12 and later, a few ast types may not be supported, such as ParamSpec, TypeAlias, TypeVar, and etc.",
+        UserWarning,
+    )
+
 
 stmt = getattr(_asttrs, "stmt", AST)
 
