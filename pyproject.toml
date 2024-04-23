@@ -1,6 +1,6 @@
 [project]
 name = "asttrs"
-version = "1.0.0"
+version = "1.0.1"
 description = "A attrs-style wrapper for python ast"
 authors = [
     {name = "ryanchao2012", email = "ryanchao2012@gmail.com"},
