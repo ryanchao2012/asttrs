@@ -93,8 +93,21 @@ class AST(Serializable):
 
     @classmethod
     def from_source(cls, source: str) -> "AST":
+        from ast import Module
 
-        return cls.from_ast(_ast.parse(source))
+        mod = _ast.parse(source)
+
+        if cls.__name__ == Module.__name__:
+            return cls.from_ast(mod)
+        
+        assert len(mod.body) == 1
+
+        mod = mod.body[0]
+
+        if cls.__name__ == mod.__class__.__name__:
+            return cls.from_ast(mod)
+        
+        raise TypeError(f"Type dismatch -> got: {mod.__class__.__name__}, expected: {cls.__name__}")
 
     def to_source(self) -> str:
         return ast_decompiler.decompile(self.to_ast())
