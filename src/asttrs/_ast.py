@@ -40,12 +40,16 @@ elif (3, 11) <= sys.version_info < (3, 12):
 
     pass
 
-elif (3, 12) <= sys.version_info:
+else:
     import asttrs._py3_12 as _asttrs
     from asttrs._py3_12 import *  # noqa
 
+    pass
+
+
+if (3, 11) <= sys.version_info:
     warnings.warn(
-        "For Python 3.12 and later, a few ast types may not be supported, such as ParamSpec, TypeAlias, TypeVar, and etc.",
+        "For Python 3.11 and later, a few ast types may not be supported, such as FunctionType, ParamSpec, TypeAlias, TypeVar, and etc.",
         UserWarning,
     )
 
