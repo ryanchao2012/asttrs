@@ -102,7 +102,7 @@ class FunctionType(mod):
 
     Examples:
 
-    >>  FunctionType(
+    >>> FunctionType(
     ...     argtypes=[
     ...         Name(id='int', ctx=Load()),
     ...         Name(id='str', ctx=Load())],
