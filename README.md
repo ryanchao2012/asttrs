@@ -9,8 +9,9 @@ A attrs-style wrapper for python ast
 
 ## Features
 
-### 1. Developer-friendly version of `ast`, 1) easier to access docstring and 2) easier to do codegen.
-
+### Developer-friendly version of `ast`
+1. easier to access docstring.
+2. easier to do codegen.
 
 ```python
 from ast import FunctionDef
@@ -57,7 +58,7 @@ help(FunctionDef)
 #  :
 
 
-# Then we can easily know how to build a function
+# It's easier to know how to build a function
 from asttrs import arguments, Return, Constant
 
 func = FunctionDef(name="foo", args=arguments(), body=[Return(value=Constant(value="Hello World"))])
@@ -69,7 +70,7 @@ print(func.to_source())
 
 ```
 
-### 2. provide `Comment` to codegen comments
+### Provide `Comment` to codegen comments
 
 ```python
 from asttrs import Comment
@@ -94,5 +95,5 @@ $ ln -vsfT .venv311 .venv
 $ pdm run inv build | pdm run black - >! src/asttrs/_py3_11.py
 
 # run testing
-$ pdm run pytest --doctest-modules --cov=src --cov-report=term-missing tests
+$ pdm run pytest --doctest-modules --cov=asttrs._py3_11 --cov-report=term-missing src/asttrs/_py3_11.py tests
 ```
