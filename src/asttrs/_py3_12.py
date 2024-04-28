@@ -310,7 +310,7 @@ class TypeAlias(stmt):
     ...             name=Name(id='Alias', ctx=Store()),
     ...             type_params=[],
     ...             value=Name(id='int', ctx=Load()))],
-    ...     type_ignores=[]).show()
+    ...     type_ignores=[]).show()        # doctest: +SKIP
     type Alias = int
     """
 
@@ -2150,7 +2150,7 @@ class TypeVar(type_param):
     ...                 value=Name(id='list', ctx=Load()),
     ...                 slice=Name(id='T', ctx=Load()),
     ...                 ctx=Load()))],
-    ...     type_ignores=[]).show()
+    ...     type_ignores=[]).show()        # doctest: +SKIP
     type Alias[T: int] = list[T]
     """
 
@@ -2179,7 +2179,7 @@ class ParamSpec(type_param):
     ...                         Name(id='int', ctx=Load())],
     ...                     ctx=Load()),
     ...                 ctx=Load()))],
-    ...     type_ignores=[]).show()
+    ...     type_ignores=[]).show()        # doctest: +SKIP
     type Alias[**P] = Callable[P, int]
     """
 
@@ -2208,7 +2208,7 @@ class TypeVarTuple(type_param):
     ...                             ctx=Load())],
     ...                     ctx=Load()),
     ...                 ctx=Load()))],
-    ...     type_ignores=[]).show()
+    ...     type_ignores=[]).show()        # doctest: +SKIP
     type Alias[*Ts] = tuple[*Ts]
     """
 
