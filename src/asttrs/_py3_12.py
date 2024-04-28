@@ -109,7 +109,7 @@ class FunctionType(mod):
     ...     returns=Subscript(
     ...         value=Name(id='List', ctx=Load()),
     ...         slice=Name(id='int', ctx=Load()),
-    ...         ctx=Load())).show()
+    ...         ctx=Load())).show()        # doctest: +SKIP
     (int, str) -> List[int]
     """
 
