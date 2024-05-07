@@ -1,5 +1,6 @@
 import pathlib
 import subprocess as sp
+import sys
 import tempfile
 
 
@@ -9,14 +10,13 @@ def blacking(source_code: str):
         f.write(source_code)
         fname = f.name
 
-    p = sp.Popen(f"cat {fname}".split(), stdout=sp.PIPE)
-
-    out = sp.check_output("black -q -".split(), stdin=p.stdout)
-
-    p.wait()
+    with sp.Popen(["cat", fname], stdout=sp.PIPE) as p:
+        cmd = [sys.executable, "-m", "black", "-q", "-"]
+        out = sp.check_output(cmd, stdin=p.stdout)
 
     try:
         pathlib.Path(fname).unlink()
+
     except FileNotFoundError:
         pass
 
@@ -29,14 +29,13 @@ def isorting(source_code: str):
         f.write(source_code)
         fname = f.name
 
-    p = sp.Popen(f"cat {fname}".split(), stdout=sp.PIPE)
-
-    out = sp.check_output("isort -q -".split(), stdin=p.stdout)
-
-    p.wait()
+    with sp.Popen(["cat", fname], stdout=sp.PIPE) as p:
+        cmd = [sys.executable, "-m", "isort", "--profile", "black", "-q", "-"]
+        out = sp.check_output(cmd, stdin=p.stdout)
 
     try:
         pathlib.Path(fname).unlink()
+
     except FileNotFoundError:
         pass
 
